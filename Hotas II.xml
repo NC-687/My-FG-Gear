@@ -1,0 +1,710 @@
+<?xml version="1.0"?>
+<!--
+Joystick binding for ThrustMaster T.Flight Hotas X
+Adrien Bailly
+
+Original file by 'flug':
+http://www.flightgear.org/forums/viewtopic.php?f=2&t=5517
+
+
+If you want to change some (or all) of the bindings, the recommended way is
+to copy this file to your home directory, make your changes there, and include
+it from your personal preferences.xml file. Use the tags <js-named n="100">
+and </js-named> around the definitions, but within the <PropertyList> scope.
+(You can use any number lower than 999.)
+
+<PropertyList>
+   <input>
+      <joysticks include="your-modified-copy.xml"/>
+   </input>
+</PropertyList>
+
+Note that you have to enclose nasal scripts in <script><![CDATA[...]]></script>
+if they contain characters that interfere with the xml markup. This is the case
+if you are, for exmaple, using < (lower than). Alternatively, you can 'escape'
+the character with "&lt;".
+
+Axis #   (direction)         mapped to
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+axis 0:  (left-right)        aileron
+axis 1:  (forward-backward)  elevator
+axis 2:  (throttle)          throttle
+axis 3:  (twist)             brake left/right
+axis 4:  (throttle rocker)   rudder
+axis 5:  (top hat)           view left/right; Changement de vue; aileron trim; rudder trim
+axis 6:  (top hat)           view up/down; zoom; elevator trim
+
+Note that internally, FG numbers buttons starting with 0.  The markings on the 
+HOTAS-X start with Button 1, and I have used the HOTAS-X number markings below:
+
+Button #     Location               Function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+button 1:   (joystick R1)           Brakes; Frein de parking; speed brake; thrust revers.
+button 2:   (joystick L1)           
+button 3:   (joystick R3)           cockpit view; reset view dir; reset all trim; tail wheel lock
+button 4:   (joystick L3)           Push-To-Talk (for fgcom)
+button 5:   (throttle)              Flaps up; richer mixture; inc prop pitch
+button 6:   (throttle)              Flaps down; leaner mixture; dec prop pitch
+button 7:   (throttle)              
+button 8:   (throttle)              Gear up/down
+button 9:   (throttle R2)           Modifier 1
+button 10:  (throttle L2)           Modifier 2
+button SE:  (base SE)               Contact magneto
+button ST:  (base ST)             Start; Batterie on/off; APU Start on/off
+
+HAT SWITCH
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+With the rocker switch and throttle twist controlling view direction, it is easy
+to look all around in different directions.
+-->
+
+<PropertyList>
+   <name type="string">T.Flight Hotas X</name>
+   <name type="string">Hotas X</name>
+   <name type="string">Thrustmaster Hotas X</name>
+   <name type="string">Thrustmaster T.Flight Hotas X</name>
+   <nasal>
+      <script>
+         <![CDATA[
+         setprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1", 0);
+         setprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2", 0);
+         ]]>
+      </script>
+   </nasal>
+    
+   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~ Axis Bindings ~~~~~~~~~~~~~~~~~~~~~~~~ -->
+   <axis n="0">
+      <desc>Joystick: Aileron</desc>
+      <binding>
+         <command>property-scale</command>
+         <property>/controls/flight/aileron</property>
+         <factor type="double">1.0</factor>
+         <power type="double">1.0</power>
+      </binding>
+   </axis>
+
+   <axis n="1">
+      <desc>Joystick: Elevator</desc>
+      <binding>
+         <command>property-scale</command>
+         <property>/controls/flight/elevator</property>
+         <factor type="double">-1.0</factor>
+         <power type="double">1.0</power>
+      </binding>
+   </axis>
+
+   <axis n="2">
+      <desc>Throttle</desc>
+      <binding>
+         <command>nasal</command>
+         <script>controls.throttleAxis()</script>
+      </binding>
+   </axis>
+
+   <axis n="3">
+      <desc>Brake Left/Right</desc>
+      <binding>
+      <command>property-scale</command>
+      <property>/controls/gear/brake-left</property>
+      <factor type="double">-1.0</factor>
+     </binding>
+     <binding>
+      <command>property-scale</command>
+      <property>/controls/gear/brake-right</property>
+      <factor type="double">1.0</factor>
+     </binding>
+   </axis>
+
+   <!-- Throttle rocker switch axis pans l/r -->
+   <axis n="4">
+      <desc>Throttle rocker switch: Rudder</desc>
+     <binding>
+         <command>property-scale</command>
+         <property>/controls/flight/rudder</property>
+         <power type="double">1.0</power>
+      </binding>
+   </axis>
+
+   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~ Hat Switch ~~~~~~~~~~~~~~~~~~~~~~~~ -->
+   <axis n="5">
+      <desc>view left/right; Changement de vue; aileron trim; rudder trim</desc>
+     <number>
+         <unix>4</unix>
+         <mac>5</mac>
+         <windows>6</windows>
+     </number>
+      <low>
+         <repeatable>true</repeatable>
+         <binding>
+            <command>nasal</command>
+            <script>
+               mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+               mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+               if(mod1==0 and mod2==0) {
+                  v = getprop("/sim/current-view/view-number");
+                  if (v == 0 or v == 4) {
+                     view.panViewDir(1);
+                  } else {
+                     view.panViewDir(-1);
+                  }
+               } elsif(mod1==1 and mod2==0) {
+                  #
+               } elsif(mod1==0 and mod2==1) {
+                  controls.aileronTrim(-0.75);
+               } elsif(mod1==1 and mod2==1) {
+                  controls.rudderTrim(0.75);
+               }
+            </script>
+         </binding>
+       <mod-up>
+         <binding>
+            <command>nasal</command>
+            <script>
+                  mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+                  mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+                  if(mod1==0 and mod2==0) {
+                     #
+                  } elsif(mod1==1 and mod2==0) {
+                     view.stepView(-1);
+                  } elsif(mod1==0 and mod2==1) {
+                     #
+                  } elsif(mod1==1 and mod2==1) {
+                     #
+                  }
+            </script>
+         </binding>
+       </mod-up>
+      </low>
+      <high>
+         <repeatable>true</repeatable>
+         <binding>
+            <command>nasal</command>
+            <script>
+               mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+               mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+               if(mod1==0 and mod2==0) {
+                  v = getprop("/sim/current-view/view-number");
+                  if (v == 0 or v == 4) {
+                     view.panViewDir(-1);
+                  } else {
+                     view.panViewDir(1);
+                  }
+               } elsif(mod1==1 and mod2==0) {
+                  #
+               } elsif(mod1==0 and mod2==1) {
+                  controls.aileronTrim(0.75);
+               } elsif(mod1==1 and mod2==1) {
+                  controls.rudderTrim(-0.75);
+               }
+            </script>
+         </binding>
+       <mod-up>
+         <binding>
+            <command>nasal</command>
+            <script>
+                  mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+                  mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+                  if(mod1==0 and mod2==0) {
+                     #
+                  } elsif(mod1==1 and mod2==0) {
+                     view.stepView(1);
+                  } elsif(mod1==0 and mod2==1) {
+                     #
+                  } elsif(mod1==1 and mod2==1) {
+                     #
+                  }
+            </script>
+         </binding>
+       </mod-up>
+      </high>
+   </axis>
+
+   <axis>
+     <desc>view up/down; zoom; elevator trim</desc>
+     <number>
+      <unix>5</unix>
+      <mac>6</mac>
+      <windows>7</windows>
+      </number>
+      <low>
+         <repeatable>true</repeatable>
+         <binding>
+            <command>nasal</command>
+            <script>
+               mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+               mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+               if(mod1==0 and mod2==0) {
+                  view.panViewPitch(1);
+               } elsif(mod1==1 and mod2==0) {
+                  view.increase();
+               } elsif(mod1==0 and mod2==1) {
+                  controls.elevatorTrim(-0.75);
+               } elsif(mod1==1 and mod2==1) {
+                  #
+               }
+            </script>
+         </binding>
+      </low>
+      <high>
+         <repeatable>true</repeatable>
+         <binding>
+            <command>nasal</command>
+            <script>
+               mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+               mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+               if(mod1==0 and mod2==0) {
+                  view.panViewPitch(-1);
+               } elsif(mod1==1 and mod2==0) {
+                  view.decrease();
+               } elsif(mod1==0 and mod2==1) {
+                  controls.elevatorTrim(0.75);
+               } elsif(mod1==1 and mod2==1) {
+                  #
+               }
+            </script>
+         </binding>
+      </high>
+   </axis>
+
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~ Button Bindings ~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+   <!-- Trigger (R1) -->
+   <button n="0">
+      <desc>Button R1(1) (trigger): Brakes; Frein de parking; speed brake; thrust revers.</desc>
+      <repeatable type="bool">true</repeatable>
+      <binding>
+         <command>nasal</command>
+         <script>
+            mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+         mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+         if(mod1==0 and mod2==0) {
+            controls.applyBrakes(1.0);
+         } elsif(mod1==1 and mod2==0) {
+            #   
+         } elsif(mod1==0 and mod2==1) {
+            #
+         } elsif(mod1==1 and mod2==1) {
+            #
+         }
+         </script>
+      </binding>
+      <mod-up>
+        <binding>
+          <command>nasal</command>
+          <script>
+            mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+            mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+            if(mod1==0 and mod2==0) {
+               controls.applyBrakes(0.0);
+            } elsif(mod1==1 and mod2==0) {
+               brake = !getprop("/controls/gear/brake-parking");
+               setprop("/controls/gear/brake-parking", brake);
+               if (brake) {
+                  gui.popupTip("Parking Brake ON");
+               } else {
+                  gui.popupTip("Parking Brake OFF");
+               }
+            } elsif(mod1==0 and mod2==1) {
+               speedb = !getprop("/controls/flight/speedbrake");
+               speedbl = !getprop("/controls/flight/speedbrake-lever");
+               speedbp = !getprop("/controls/flight/speedbrake-pos-norm");
+               setprop("/controls/flight/speedbrake", speedb);
+               setprop("/controls/flight/speedbrake-lever", speedbl);
+               setprop("/controls/flight/speedbrake-pos-norm", speedbp);
+               if (speedb) {
+                  gui.popupTip("Speed Brake ON");
+               } else {
+                  gui.popupTip("Speed Brake OFF");
+               } 
+            } elsif(mod1==1 and mod2==1) {
+               reverser = !getprop("/controls/engines/engine[0]/reverser");
+               props.setAll("/controls/engines/engine", "reverser", reverser);
+               if (reverser) {
+                  gui.popupTip("Thrust Reverser ON");
+               } else {
+                  gui.popupTip("Thrust Reverser OFF");
+               }
+            }
+          </script>
+        </binding>
+      </mod-up>
+   </button>
+
+   <!-- Button right of Hat switch, Labeled L1(2) -->
+   <button n="1">
+      <desc>Button L1(2) (joystick center): ???</desc>
+     <mod-up>
+      <binding>
+         <command>nasal</command>
+         <script>
+            mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+            mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+            if(mod1==0 and mod2==0) {
+               #
+            } elsif(mod1==1 and mod2==0) {
+               #
+            } elsif(mod1==0 and mod2==1) {
+               #
+            } elsif(mod1==1 and mod2==1) {
+               #
+            }
+         </script>
+      </binding>
+     </mod-up>
+   </button>
+
+
+   <!-- Front button, right of trigger, (R3) -->
+   <button n="2">
+      <desc>Button R3(3): cockpit view; reset view dir; reset all trim; tail wheel lock</desc>
+     <repeatable type="bool">false</repeatable>
+     <binding>
+         <command>nasal</command>
+         <script>
+            mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+         mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+         if(mod1==0 and mod2==0) {
+            setprop("/sim/current-view/view-number", 0);
+         } elsif(mod1==1 and mod2==0) {
+            view.resetView();            
+         } elsif(mod1==0 and mod2==1) {
+            setprop("/controls/flight/elevator-trim", 0);
+            setprop("/controls/flight/aileron-trim", 0);
+            setprop("/controls/flight/rudder-trim", 0);
+            gui.popupTip("All trim reseted");
+         } elsif(mod1==1 and mod2==1) {
+            twlock = !getprop("/controls/gear/tailwheel-lock");
+            setprop("/controls/gear/tailwheel-lock", twlock);
+            if (twlock) {
+               gui.popupTip("Tail Wheel LOCKED");
+            } else {
+               gui.popupTip("Tail Wheel UNLOCKED");
+            }
+         }
+         </script>
+      </binding>
+   </button>
+
+
+   <!-- Button far right of Hat switch, Labeled L3(4) -->
+   <button n="3">
+      <desc>Button L3(4): Push-To-Talk (for fgcom)</desc>
+     <repeatable type="bool">true</repeatable>
+     <binding>
+      <command>nasal</command>
+      <script>
+         mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+         mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+         if(mod1==0 and mod2==0) {
+            controls.ptt(1); # push-to-talk (fgcom) ON
+         } elsif(mod1==1 and mod2==0) {
+            #
+         } elsif(mod1==0 and mod2==1) {
+            #
+         } elsif(mod1==1 and mod2==1) {
+            #
+         }
+      </script>
+     </binding>
+     <mod-up>
+         <binding>
+            <command>nasal</command>
+            <script>
+                mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+            mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+            if(mod1==0 and mod2==0) {
+               controls.ptt(0); # push-to-talk (fgcom) OFF
+            } elsif(mod1==1 and mod2==0) {
+               #
+            } elsif(mod1==0 and mod2==1) {
+               #
+            } elsif(mod1==1 and mod2==1) {
+               #
+            }
+            </script>
+         </binding>
+      </mod-up>
+   </button>
+
+
+   <!-- Throttle Button labeled 5 -->
+   <button n="4">
+      <desc>Button (5): Flaps up; richer mixture; inc prop pitch</desc>
+      <repeatable type="bool">false</repeatable>
+      <binding>
+         <command>nasal</command>
+         <script>
+            mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+         mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+         if(mod1==0 and mod2==0) {
+            controls.flapsDown(-1);
+            gui.popupTip(sprintf("Flaps: %d deg", 30*getprop("/controls/flight/flaps")+0.1));
+         } elsif(mod1==1 and mod2==0) {
+            controls.adjMixture(10);
+            gui.popupTip(sprintf("Mixture rich"));
+         } elsif(mod1==0 and mod2==1) {
+            controls.adjPropeller(10);
+                gui.popupTip(sprintf("Propeller coarse"));
+         } elsif(mod1==1 and mod2==1) {
+            #
+         }
+         </script>
+      </binding>
+      <mod-up>
+         <binding>
+            <command>nasal</command>
+            <script>
+                mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+            mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+            if(mod1==0 and mod2==0) {
+               controls.flapsDown(0);
+               gui.popupTip(sprintf("Flaps: %d deg", 30*getprop("/controls/flight/flaps")+0.1));
+            } elsif(mod1==1 and mod2==0) {
+               #
+            } elsif(mod1==0 and mod2==1) {
+               #
+            } elsif(mod1==1 and mod2==1) {
+               #
+            }
+            </script>
+         </binding>
+      </mod-up>
+   </button>   
+
+   <!-- Throttle Button labeled 6 -->
+   <button n="5">
+      <desc>Button (6): Flaps down; leaner mixture; dec prop pitch</desc>
+      <repeatable type="bool">false</repeatable>
+      <binding>
+         <command>nasal</command>
+         <script>
+            mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+         mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+         if(mod1==0 and mod2==0) {
+            controls.flapsDown(1);
+            gui.popupTip(sprintf("Flaps: %d deg", 30*getprop("/controls/flight/flaps")+0.1));
+         } elsif(mod1==1 and mod2==0) {
+            controls.adjMixture(-10);
+                gui.popupTip(sprintf("Mixture lean"));   
+         } elsif(mod1==0 and mod2==1) {
+            controls.adjPropeller(-10);
+                gui.popupTip(sprintf("Propeller fine"));
+         } elsif(mod1==1 and mod2==1) {
+            #
+         }
+         </script>
+      </binding>
+      <mod-up>
+         <binding>
+            <command>nasal</command>
+            <script>
+                mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+            mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+            if(mod1==0 and mod2==0) {
+               controls.flapsDown(0);
+               gui.popupTip(sprintf("Flaps: %d deg", 30*getprop("/controls/flight/flaps")+0.1));
+            } elsif(mod1==1 and mod2==0) {
+               #
+            } elsif(mod1==0 and mod2==1) {
+               #
+            } elsif(mod1==1 and mod2==1) {
+               #
+            }
+            </script>
+         </binding>
+      </mod-up>
+   </button>  
+
+   <!-- Throttle Button labeled 7 (circle)-->
+   <button n="6">
+      <desc>Button (7): ???</desc>
+      <repeatable type="bool">false</repeatable>
+      <binding>
+         <command>nasal</command>
+         <script>
+            mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+         mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+         if(mod1==0 and mod2==0) {
+            #
+         } elsif(mod1==1 and mod2==0) {
+            #   
+         } elsif(mod1==0 and mod2==1) {
+            #
+         } elsif(mod1==1 and mod2==1) {
+            #
+         }
+         </script>
+      </binding>
+      <mod-up>
+         <binding>
+            <command>nasal</command>
+            <script>
+                mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+            mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+            if(mod1==0 and mod2==0) {
+               #
+            } elsif(mod1==1 and mod2==0) {
+               #
+            } elsif(mod1==0 and mod2==1) {
+               #
+            } elsif(mod1==1 and mod2==1) {
+               #
+            }
+            </script>
+         </binding>
+      </mod-up>
+   </button>
+   
+   <!-- Throttle Button labeled 8 (triangle) -->
+   <button n="7">
+      <desc>Button (8): Landing Gear Toggle</desc>
+      <repeatable type="bool">false</repeatable>
+      <binding>
+         <command>nasal</command>
+         <script>
+         mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+         mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+         if(mod1==0 and mod2==0) {
+            controls.gearToggle();
+         } elsif(mod1==1 and mod2==0) {
+               
+         } elsif(mod1==0 and mod2==1) {
+         
+         } elsif(mod1==1 and mod2==1) {
+
+         }          
+         </script>
+      </binding>
+   </button>   
+   
+   <!-- Throttle Button labeled R2(9) -->
+   <button n="8">
+      <desc>Button R2(9): Modifier 1</desc>
+      <repeatable type="bool">false</repeatable>
+      <binding>
+         <command>nasal</command>
+         <script>
+            setprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1", 1);
+         </script>
+      </binding>
+      <mod-up>
+         <binding>
+            <command>nasal</command>
+            <script>
+               setprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1", 0);
+            </script>
+         </binding>
+      </mod-up>
+   </button>
+   
+   <!-- Throttle Button labeled L2(10) -->
+   <button n="9">
+      <desc>Button L2(10): Modifier 2</desc>
+      <repeatable type="bool">false</repeatable>
+      <binding>
+         <command>nasal</command>
+         <script>
+            setprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2", 1);
+         </script>
+      </binding>
+      <mod-up>
+         <binding>
+            <command>nasal</command>
+            <script>
+               setprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2", 0);
+            </script>
+         </binding>
+      </mod-up>
+   </button> 
+   
+   <!-- Base Button SE -->
+   <button n="10">
+      <desc>Button SE: Magnetos</desc>
+      <repeatable type="bool">false</repeatable>
+      <binding>
+         <command>nasal</command>
+         <script>
+            mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+         mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+         if(mod1==0 and mod2==0) {
+            l = getprop("/controls/engines/engine/magnetos");
+            if (l == 0) {
+               props.setAll("/controls/engines/engine", "magnetos", 1);
+            } elsif ( l == 1 ) {
+               props.setAll("/controls/engines/engine", "magnetos", 2);
+            } elsif ( l == 2 ) {
+               props.setAll("/controls/engines/engine", "magnetos", 3);
+            } elsif ( l == 3 ) {
+               props.setAll("/controls/engines/engine", "magnetos", 0);
+            }
+         } elsif(mod1==1 and mod2==0) {
+            #
+         } elsif(mod1==0 and mod2==1) {
+            #
+         } elsif(mod1==1 and mod2==1) {
+            #
+         }
+        </script>
+      </binding>
+   </button>  
+   
+   <!-- Base Button ST -->
+   <button n="11">
+      <desc>Button ST: Start; Batterie on/off; APU Start on/off</desc>
+      <repeatable type="bool">true</repeatable>
+      <binding>
+         <command>nasal</command>
+         <script>
+            mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+         mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+         if(mod1==0 and mod2==0) {
+            setprop("/controls/engines/engine/starter", 1);
+            setprop("/controls/engines/engine[1]/starter", 1);
+            setprop("/controls/engines/engine[2]/starter", 1);
+            setprop("/controls/engines/engine[3]/starter", 1);
+            setprop("/controls/engines/engine[4]/starter", 1);
+            setprop("/controls/engines/engine/starter-switch", 1);
+            setprop("/controls/engines/engine[1]/starter-switch", 1);
+            setprop("/controls/engines/engine[2]/starter-switch", 1);
+            setprop("/controls/engines/engine[3]/starter-switch", 1);
+            setprop("/controls/engines/engine[4]/starter-switch", 1);
+         } elsif(mod1==1 and mod2==0) {
+            #
+         } elsif(mod1==0 and mod2==1) {
+            #
+         } elsif(mod1==1 and mod2==1) {
+            #
+         }
+         </script>
+      </binding>
+     <mod-up>
+      <binding>
+          <command>nasal</command>
+         <script>
+            mod1 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier1");
+            mod2 = getprop("/input/joysticks/js[0]/t-flight-hotas-x-modifier2");           
+            if(mod1==0 and mod2==0) {
+               setprop("/controls/engines/engine/starter", 0);
+               setprop("/controls/engines/engine[1]/starter", 0);
+               setprop("/controls/engines/engine[2]/starter", 0);
+               setprop("/controls/engines/engine[3]/starter", 0);
+               setprop("/controls/engines/engine[4]/starter", 0);
+               setprop("/controls/engines/engine/starter-switch", 0);
+               setprop("/controls/engines/engine[1]/starter-switch", 0);
+               setprop("/controls/engines/engine[2]/starter-switch", 0);
+               setprop("/controls/engines/engine[3]/starter-switch", 0);
+               setprop("/controls/engines/engine[4]/starter-switch", 0);
+            } elsif(mod1==1 and mod2==0) {
+               bat_sw = !getprop("/controls/electric/battery-switch");
+               setprop("/controls/electric/battery-switch", bat_sw);
+            } elsif(mod1==0 and mod2==1) {
+               apu_sw = !getprop("/controls/electric/APU-generator");
+               setprop("/controls/electric/APU-generator", apu_sw);
+            } elsif(mod1==1 and mod2==1) {
+               #
+            }
+         </script>
+      </binding>
+     </mod-up>
+   </button>  
+</PropertyList>
